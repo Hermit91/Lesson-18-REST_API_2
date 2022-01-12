@@ -13,7 +13,7 @@ import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
-public class HWDemowebshopTests extends WishlistResponse {
+public class HWDemowebshopTests {
 
     @BeforeAll
     static void setUp() {
