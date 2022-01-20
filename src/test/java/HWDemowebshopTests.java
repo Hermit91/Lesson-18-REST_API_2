@@ -5,12 +5,15 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Cookie;
 
+import java.util.Map;
+
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 public class HWDemowebshopTests {
@@ -54,46 +57,47 @@ public class HWDemowebshopTests {
 
     @Test
     @Tag("API+UI")
-    void addToWishlistWithCookiesTest() {
+    void OneWishTest() {
 
-        String login = "test_demowebshop_91@gmail.ru";
-        String password = "test1234";
+        final String LOGIN = "test_demowebshop_91@gmail.ru";
+        final String PASSWORD = "test1234";
 
-        step("Get cookie and set it to browser by API", () -> {
-            String authorizationCookie =
+        step("login and adding item to wishlist by API", () -> {
+
+            Map<String, String> authorizationCookies =
                     given()
                             .contentType("application/x-www-form-urlencoded; charset=UTF-8")
-                            .formParam("Email", login)
-                            .formParam("Password", password)
+                            .formParam("Email", LOGIN)
+                            .formParam("Password", PASSWORD)
                             .when()
-                            .post("login")
+                            .post("/login")
                             .then()
                             .statusCode(302)
                             .extract()
-                            .cookie("NOPCOMMERCE.AUTH");
+                            .cookies();
 
-            step("Open site (logo)", () ->
+            given()
+                    .contentType("application/x-www-form-urlencoded; charset=UTF-8")
+                    .cookies(authorizationCookies)
+                    .body("addtocart_43.EnteredQuantity=1")
+                    .when()
+                    .post("/addproducttocart/details/43/2")
+                    .then()
+                    .statusCode(200)
+                    .body("success", is(true))
+                    .body("updatetopwishlistsectionhtml", is(equalTo("(1)")));
+
+            String authorizationCookie = authorizationCookies.get("NOPCOMMERCE.AUTH");
+
+            step("open logo", () ->
                     open("/Themes/DefaultClean/Content/images/logo.png"));
 
-            step("Adding cookie to browser", () ->
-                    getWebDriver().manage().addCookie(
-                            new Cookie("NOPCOMMERCE.AUTH", authorizationCookie)));
+            step("adding cookies", () ->
+                    getWebDriver().manage().addCookie(new Cookie("NOPCOMMERCE.AUTH", authorizationCookie)));
         });
 
-        step("Open smartphone page", () ->
-                open("/smartphone"));
-
-        step("Check user's wishlist", () ->
-                $(".wishlist-qty").shouldHave(text("(0)")));
-
-        step("Add smartphone to wishlist", () ->
-                $("#add-to-wishlist-button-43").click());
-
-        step("Check user's wishlist again", () ->
-                $(".wishlist-qty").shouldHave(text("(1)")));
-
         step("Go to wishlist", () ->
-                $(".wishlist-qty").click());
+                open("/wishlist"));
 
         step("Setting value of wishes", () ->
                 $(".qty-input").setValue("0"));
@@ -103,6 +107,6 @@ public class HWDemowebshopTests {
 
         step("And finally", () ->
                 $(".wishlist-qty").shouldHave(text("(0)")));
+
     }
 }
-

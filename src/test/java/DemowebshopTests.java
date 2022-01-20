@@ -30,7 +30,7 @@ public class DemowebshopTests {
                 // body("updatetopcartsectionhtml": "(???)")
                 .extract().response();
 
-        System.out.println(response);
+        System.out.println(response.asString());
     }
 
     @Test
